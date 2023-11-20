@@ -1,0 +1,10 @@
+find_package(GTest CONFIG REQUIRED)
+link_libraries(GTest::gtest)
+link_libraries(miniss)
+include_directories(../include)
+
+aux_source_directory(. CASES)
+foreach(CASE ${CASES})
+    cmake_path(GET CASE STEM FNAME)
+    add_executable(${FNAME} ${CASE})
+endforeach()
