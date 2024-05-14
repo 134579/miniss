@@ -2,8 +2,6 @@ cmake_minimum_required(VERSION 3.22)
 project(miniss)
 
 set(CMAKE_CXX_STANDARD 20)
-add_definitions(-D_GLIBCXX_USE_CXX11_ABI=0)
-
 
 aux_source_directory(lib SRC)
 aux_source_directory(lib/io SRC1)
