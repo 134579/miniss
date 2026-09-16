@@ -10,7 +10,7 @@ using namespace miniss;
 File_io::File_io()
 {
     auto r = ::syscall(__NR_io_setup, max_io, &aio_ctx_);
-    throw_system_error_if(r < 0);
+    throw_system_error_if(r < 0, "io_setup failed");
 }
 
 File_io::~File_io()
@@ -33,7 +33,7 @@ future<std::uint64_t> File_io::submit_write(int fd, uint64_t pos, std::span<cons
     io.aio_offset = pos;
 
     return submit_io_(io).then([](io_event ev) {
-        throw_kernel_error(long(ev.res));
+        throw_kernel_error(long(ev.res), "aio write failed");
         return make_ready_future<std::uint64_t>(std::uint64_t(ev.res));
     });
 }
@@ -50,7 +50,7 @@ future<std::uint64_t> File_io::submit_read(int fd, uint64_t pos, std::span<std::
     io.aio_offset = pos;
 
     return submit_io_(io).then([](io_event ev) {
-        throw_kernel_error(long(ev.res));
+        throw_kernel_error(long(ev.res), "aio read failed");
         return make_ready_future<std::uint64_t>(std::uint64_t(ev.res));
     });
 }

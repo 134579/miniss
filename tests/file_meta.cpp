@@ -18,8 +18,10 @@ constexpr std::string_view kNonExistPath = "miniss.file_meta.test0";
 constexpr std::string_view kTestPath = "miniss.file_meta.test1";
 constexpr std::uintmax_t kTestFileSize = 1024 * 16;
 
-int main()
+int main(int argc, char** argv)
 {
+    testing::InitGoogleTest(&argc, argv);
+
     const auto p1 = fs::temp_directory_path() / kNonExistPath;
     const auto p2 = fs::temp_directory_path() / kTestPath;
     const auto guard = nonstd::make_scope_exit([&] {
@@ -51,7 +53,7 @@ int main()
         auto f2 = cpu->open_file(p2, O_RDONLY).then([](File file) { return file.size(); }).then([](auto size) {
             fmt::print("filesize: {} - {}\n", size, kTestFileSize);
 
-            EXPECT_EQ(size, kTestFileSize);
+            EXPECT_EQ(size, kTestFileSize + 1);  // TEMP: 故意失败，验证退出码
         });
 
         std::vector<future<>> futs;
@@ -59,4 +61,7 @@ int main()
         futs.push_back(std::move(f2));
         return when_all(std::move(futs)).then([](auto&& f) { return make_ready_future<int>(0); });
     });
+
+    // 断言都在 TEST 体之外（ad-hoc 结果），必须显式把失败状态转成退出码，否则 ctest 一律判 PASS
+    return testing::UnitTest::GetInstance()->Failed() ? 1 : 0;
 }

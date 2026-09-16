@@ -28,6 +28,14 @@ template <typename T> inline void throw_kernel_error(T r)
     }
 }
 
+template <typename T> inline void throw_kernel_error(T r, const char* what)
+{
+    static_assert(std::is_signed<T>::value, "kernel error variables must be signed");
+    if (r < 0) {
+        throw std::system_error(-r, std::system_category(), what);
+    }
+}
+
 inline const char* current_exception_message()
 try {
     throw;

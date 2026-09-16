@@ -36,5 +36,9 @@ CPMAddPackage(
 
 target_link_libraries(${PROJECT_NAME} PUBLIC fmt::fmt spdlog::spdlog rt)
 
-enable_testing()
-add_subdirectory(tests)
+# include(CTest) 会调用 enable_testing() 并额外生成 DartConfiguration.tcl
+# （VS Code 的测试面板需要它，用 enable_testing() 会一直报 "Cannot find file"）
+include(CTest)
+if (BUILD_TESTING)
+    add_subdirectory(tests)
+endif ()

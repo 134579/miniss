@@ -36,7 +36,8 @@ private:
 
     Semaphore aio_available_ { max_io };
     Eventfd aio_eventfd_;
-    aio_context_t aio_ctx_;
+    // 内核要求 io_setup 的 *ctxp 必须是 0，否则返回 EINVAL，所以必须显式初始化
+    aio_context_t aio_ctx_ = 0;
 };
 
 }

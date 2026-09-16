@@ -18,8 +18,10 @@ namespace fs = std::filesystem;
 constexpr std::string_view kTestPath = "miniss.file_io.test";
 constexpr std::uintmax_t kTestFileSize = 1024 * 16;
 
-int main()
+int main(int argc, char** argv)
 {
+    testing::InitGoogleTest(&argc, argv);
+
     const auto p = fs::temp_directory_path() / kTestPath;
     const auto guard = nonstd::make_scope_exit([&] { fs::remove(p); });
 
@@ -52,4 +54,7 @@ int main()
 
         co_return 0;
     });
+
+    // 断言都在 TEST 体之外（ad-hoc 结果），必须显式把失败状态转成退出码，否则 ctest 一律判 PASS
+    return testing::UnitTest::GetInstance()->Failed() ? 1 : 0;
 }
