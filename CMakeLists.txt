@@ -16,7 +16,8 @@ include(${CMAKE_CURRENT_SOURCE_DIR}/cmake/get_cpm.cmake)
 CPMAddPackage(
     NAME fmt
     GITHUB_REPOSITORY fmtlib/fmt
-    GIT_TAG 9.1.0
+    # 9.1.0 的 consteval 格式串检查在新版 clang 下报错（fmt 10 起重写），需 >= 10
+    GIT_TAG 11.2.0
     GIT_SHALLOW TRUE
     OPTIONS "FMT_INSTALL OFF"
 )
@@ -24,7 +25,8 @@ CPMAddPackage(
 CPMAddPackage(
     NAME spdlog
     GITHUB_REPOSITORY gabime/spdlog
-    GIT_TAG v1.11.0
+    # 与上面的 fmt 配套（spdlog 1.15.3 自带的正是 fmt 11.2.0）；1.11.0 不支持 fmt 10+
+    GIT_TAG v1.15.3
     GIT_SHALLOW TRUE
     OPTIONS
         "SPDLOG_INSTALL OFF"
