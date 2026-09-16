@@ -52,9 +52,11 @@ int main(int argc, char** argv)
         EXPECT_EQ(nr, kTestFileSize);
         EXPECT_TRUE(std::equal(buf1.begin(), buf1.end(), buf2.begin()));
 
-        co_return 0;
+        // 进程退出码由这个返回值决定（App::run -> OS::exit -> std::_Exit），
+        // 这里带上 gtest 的 ad-hoc 断言结果，否则断言失败也会退出码 0
+        co_return testing::UnitTest::GetInstance()->Failed() ? 1 : 0;
     });
 
-    // 断言都在 TEST 体之外（ad-hoc 结果），必须显式把失败状态转成退出码，否则 ctest 一律判 PASS
+    // App::run() 经 OS::exit() -> std::_Exit() 结束进程，正常不会执行到这里
     return testing::UnitTest::GetInstance()->Failed() ? 1 : 0;
 }

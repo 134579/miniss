@@ -53,15 +53,19 @@ int main(int argc, char** argv)
         auto f2 = cpu->open_file(p2, O_RDONLY).then([](File file) { return file.size(); }).then([](auto size) {
             fmt::print("filesize: {} - {}\n", size, kTestFileSize);
 
-            EXPECT_EQ(size, kTestFileSize + 1);  // TEMP: 故意失败，验证退出码
+            EXPECT_EQ(size, kTestFileSize);
         });
 
         std::vector<future<>> futs;
         futs.push_back(std::move(f1));
         futs.push_back(std::move(f2));
-        return when_all(std::move(futs)).then([](auto&& f) { return make_ready_future<int>(0); });
+        return when_all(std::move(futs)).then([](auto&& f) {
+            // 进程退出码由这个返回值决定（App::run -> OS::exit -> std::_Exit），
+            // 这里带上 gtest 的 ad-hoc 断言结果，否则断言失败也会退出码 0
+            return make_ready_future<int>(testing::UnitTest::GetInstance()->Failed() ? 1 : 0);
+        });
     });
 
-    // 断言都在 TEST 体之外（ad-hoc 结果），必须显式把失败状态转成退出码，否则 ctest 一律判 PASS
+    // App::run() 经 OS::exit() -> std::_Exit() 结束进程，正常不会执行到这里
     return testing::UnitTest::GetInstance()->Failed() ? 1 : 0;
 }
