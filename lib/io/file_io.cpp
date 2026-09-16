@@ -3,6 +3,7 @@
 #include <cstring>
 #include <linux/aio_abi.h>
 #include <spdlog/spdlog.h>
+#include <sys/syscall.h>
 
 using namespace miniss;
 

@@ -1,5 +1,5 @@
 //
-// Copyright (c) 2020-2020 Martin Moene
+// Copyright (c) 2020-2025 Martin Moene
 //
 // https://github.com/martinmoene/scope-lite
 //
@@ -13,7 +13,7 @@
 #define NONSTD_SCOPE_LITE_HPP
 
 #define scope_lite_MAJOR  0
-#define scope_lite_MINOR  2
+#define scope_lite_MINOR  3
 #define scope_lite_PATCH  0
 
 #define scope_lite_VERSION  scope_STRINGIFY(scope_lite_MAJOR) "." scope_STRINGIFY(scope_lite_MINOR) "." scope_STRINGIFY(scope_lite_PATCH)
@@ -77,24 +77,21 @@
 #if scope_CPP20_OR_GREATER && defined(__has_include )
 # if   __has_include( <scope> )
 #  define scope_HAVE_STD_SCOPE  1
+#  define scope_HAVE_EXP_SCOPE  0
 # elif __has_include( <experimental/scope> )
-#  define scope_HAVE_STD_SCOPE  1
+#  define scope_HAVE_STD_SCOPE  0
+#  define scope_HAVE_EXP_SCOPE  1
 # else
 #  define scope_HAVE_STD_SCOPE  0
+#  define scope_HAVE_EXP_SCOPE  0
 # endif
 #else
 # define  scope_HAVE_STD_SCOPE  0
+# define  scope_HAVE_EXP_SCOPE  0
 #endif
 
 #define  scope_USES_STD_SCOPE  ( (scope_CONFIG_SELECT_SCOPE == scope_SCOPE_STD) || ((scope_CONFIG_SELECT_SCOPE == scope_SCOPE_DEFAULT) && scope_HAVE_STD_SCOPE) )
-
-//
-// Using std <scope>:
-//
-// ToDo:
-// - choose <scope> or <experimental/scope>.
-// - use correct namespace in using below.
-//
+#define  scope_USES_EXP_SCOPE  ( (scope_CONFIG_SELECT_SCOPE == scope_SCOPE_STD) || ((scope_CONFIG_SELECT_SCOPE == scope_SCOPE_DEFAULT) && scope_HAVE_EXP_SCOPE) )
 
 #if scope_USES_STD_SCOPE
 
@@ -111,6 +108,23 @@ namespace nonstd
     using std::make_scope_fail;
     using std::make_scope_success;
     using std::make_unique_resource_checked;
+}
+
+#elif scope_USES_EXP_SCOPE
+
+#include <experimental/scope>
+
+namespace nonstd
+{
+    using std::experimental::scope_exit;
+    using std::experimental::scope_fail;
+    using std::experimental::scope_success;
+    using std::experimental::unique_resource;
+
+    using std::experimental::make_scope_exit;
+    using std::experimental::make_scope_fail;
+    using std::experimental::make_scope_success;
+    using std::experimental::make_unique_resource_checked;
 }
 
 #else // scope_USES_STD_SCOPE
@@ -235,7 +249,8 @@ namespace nonstd
 #define scope_HAVE_IS_NOTHROW_ASSIGNABLE  scope_CPP11_110
 #define scope_HAVE_IS_NOTHROW_MOVE_ASSIGNABLE  scope_CPP11_110
 
-#define scope_HAVE_REFERENCE_WRAPPER      scope_CPP11_110
+#define scope_HAVE_FUNCATIONAL            scope_CPP11_110
+#define scope_HAVE_REFERENCE_WRAPPER      scope_HAVE_FUNCATIONAL
 
 #define scope_HAVE_REMOVE_CV              scope_CPP11_90
 #define scope_HAVE_REMOVE_REFERENCE       scope_CPP11_90
@@ -314,6 +329,10 @@ namespace nonstd
 #include <exception>    // exception, terminate(), uncaught_exceptions()
 #include <limits>       // std::numeric_limits<>
 #include <utility>      // move(), forward<>(), swap()
+
+#if scope_HAVE_FUNCATIONAL
+# include <functional>
+#endif
 
 #if scope_HAVE_TYPE_TRAITS
 # include <type_traits>
@@ -827,9 +846,10 @@ public:
         other.release();
     }
 
-    scope_constexpr_ext ~scope_success() scope_noexcept_op(
-        scope_noexcept_op(this->exit_function())
-    )
+    scope_constexpr_ext ~scope_success()
+#if !scope_BETWEEN(scope_COMPILER_GNUC_VERSION, 1, 900) // GCC >= 9, issue #12
+        scope_noexcept_op( scope_noexcept_op(this->exit_function()) )
+#endif
     {
         if ( uncaught_on_creation >= detail::uncaught_exceptions() )
             exit_function();
@@ -896,7 +916,7 @@ private:
     );
 
     scope_static_assert(
-          (std11::is_move_constructible<R>::value && std11::is_nothrow_move_constructible<D>::value )
+          (std11::is_move_constructible<D>::value && std11::is_nothrow_move_constructible<D>::value )
         || std11::is_copy_constructible<D>::value
         , "deleter must be nothrow_move_constructible or copy_constructible"
     );

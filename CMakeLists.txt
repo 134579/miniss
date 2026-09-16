@@ -11,10 +11,28 @@ aux_source_directory(lib/util SRC3)
 add_library(${PROJECT_NAME} ${SRC} ${SRC1} ${SRC2} ${SRC3})
 target_include_directories(${PROJECT_NAME} PRIVATE include)
 
-find_package(fmt CONFIG REQUIRED)
-find_package(spdlog CONFIG REQUIRED)
+include(${CMAKE_CURRENT_SOURCE_DIR}/cmake/get_cpm.cmake)
 
-target_link_libraries(${PROJECT_NAME} PRIVATE fmt::fmt spdlog::spdlog)
+CPMAddPackage(
+    NAME fmt
+    GITHUB_REPOSITORY fmtlib/fmt
+    GIT_TAG 9.1.0
+    GIT_SHALLOW TRUE
+    OPTIONS "FMT_INSTALL OFF"
+)
+
+CPMAddPackage(
+    NAME spdlog
+    GITHUB_REPOSITORY gabime/spdlog
+    GIT_TAG v1.11.0
+    GIT_SHALLOW TRUE
+    OPTIONS
+        "SPDLOG_INSTALL OFF"
+        "SPDLOG_FMT_EXTERNAL ON"
+        "SPDLOG_FMT_EXTERNAL_HO OFF"
+)
+
+target_link_libraries(${PROJECT_NAME} PUBLIC fmt::fmt spdlog::spdlog rt)
 
 enable_testing()
 add_subdirectory(tests)

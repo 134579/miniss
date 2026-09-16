@@ -4,6 +4,7 @@
 #include <algorithm>
 #include <cassert>
 #include <spdlog/spdlog.h>
+#include <sys/syscall.h>
 
 using namespace miniss;
 
